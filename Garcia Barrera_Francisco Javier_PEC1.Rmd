@@ -1,0 +1,255 @@
+---
+title: "Análisis de datos ómicos-Primera prueba de evaluación continua."
+author: "Francisco Javier García Barrera"
+date: "`r Sys.Date()`"
+output:
+  word_document:
+    toc: true
+    toc_depth: 3
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
+number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### **Resumen**
+
+En este trabajo se ha realizado un objeto de clase SummarizedExperiment y un análisis exploratorio de los datos extraidos del repositorio GitHub "metaboData". Dichos datos son originarios del artículo científico "Metabotypes of response to bariatric surgery independent of the magnitude of weight loss", en el cual se hace un estudio de la evolución de ciertos parámetros metabólicos tras el sometimiento de pacientes hombres y mujeres de distinta edad a una cirugía bariátrica. 
+
+Se observa que, tras un periodo de unos 5 meses, hay una disminución de los niveles de ciertos parámetros tales como el peso, triglicéridos, colesterol total y glucosa en sangre. 
+
+### **Objetivos**
+
+El objetivo de este trabajo es la creación de un objeto de clase SummarizedExperiments y un análisis exploratorio de los datos extraidos del repositorio de GitHub metaboData.
+
+### **Métodos**
+
+Los datos a analizar se encuentran en el archivo Metabotypingpaper en el repositorio metaboData de GitHub, dichos datos pertenecen a un artículo científico llamado "Metabotypes of response to bariatric surgery independent of the magnitude of weight loss" (<https://doi.org/10.1371/journal.pone.0198214>). En dicho trabajo se realizó un estudio de parámetros metabólicos, además de medición del peso, de pacientes de ambos géneros y distintas edades que se sometieron a una cirugía bariátrica para el tratamiento de la obesidad mórbida en un periodo de 5-6 meses. 
+
+Para extraer los datos a analizar, se vinculó un proyecto de R con GitHub y a continuación se clonaron del repositorio donde se encontraban guardándose después en el archivo del proyecto de esta PEC, para esto último se usó el comando "git clone" en el terminal de R seguido de la dirección url del repositorio (<https://github.com/nutrimetabolomics/metaboData.git>). 
+
+Una vez obtenidos los datos del repositorio, se cargaron los datos y metadatos deseados (DataValues y DataInfo del archivo Metabotypingpaper) y, tras observar la composición y el contenido de estos, se crea un objeto clase SummarizedExperiments, para ello se usó la función y paquete con el mismo nombre.
+
+Después se realizó un análisis exploratorio. Debido a la gran cantidad de datos existente y el espacio limitado que se dispone para este trabajo, se hace análisis exploratorio de parte de los datos: género, tipo de cirugía, peso y niveles de triglicéridos, colesterol total y glucosa (los tres últimos en distintos momentos). Se crearon gráficas de líneas donde se comparaban las evoluciones de los parámetros a lo largo del tiempo según el género de los pacientes y el tipo de cirugía. Para la creación de las gráficas, se hizo la media de cada variable, de esta forma se amortiguan los valores extremos. 
+
+Para la realización de este trabajo y los análisis se utilizó el software RStudio y los paquetes "readr" y "SummarizedExperiment".
+
+Por último, todos los análisis, resultados e informe desarrollados y obtenidos se suben a un repositorio creado específicamente para la recepción de este trabajo y posterior evaluación (<https://github.com/fragarbar/Garcia-Barrera-Francisco-Javier-PEC1.git>).
+
+### **Resultados**
+
+```{r, include=FALSE}
+#Se cargan las librerías requeridas para los análisis.
+
+library(readr)
+library(SummarizedExperiment)
+```
+
+```{r}
+#Se cargan los datos que se van a utilizar en los análisis.
+
+DataValues= read_csv("metaboData/Datasets/2018-MetabotypingPaper/DataValues_S013.csv")
+MetaDataInfo= read_csv("metaboData/Datasets/2018-MetabotypingPaper/DataInfo_S013.csv")
+```
+
+```{r}
+#Debido a la gran cantidad de datos, se muestra parte de los datos para observar la composición y contenido de estos.
+
+head(DataValues)
+```
+
+Podemos observar parte de los datos a analizar, las variables se encuentran en las columnas y cada sujeto de estudio se encuentran en filas. También podemos observar la cantidad de variables que hay en el fichero (696),m dicha cantidad de datos se debe en parte a que se tomaron mustras en distintos momentos a lo largo de los 6 meses.
+
+```{r}
+#Debido a la gran cantidad de datos, muestra parte de los metadatos para observar la composició y contenido de estos.
+
+head(MetaDataInfo)
+```
+
+Al igual que ocurre con los datos, podemos observar parte de los metadatos, en el que podemos ver las variables que hay en el fichero de datos y una pequeña descripción de cada variable.
+
+Lo siguiente que se muestra son los resultados obtenidos de la creación del objeto clase SummarizedExperiment.
+
+```{r}
+#Para poder realizar SummarizedExperimentes con los datos y metadatos, es necesario que los datos estén en forma de matriz y los metadatos como dataframe, por ello se cambia el formato de ambos.
+
+Datavalues=as.matrix(DataValues[, -1])#De esta forma se transforman los datos en una matriz, además se elimina a primera columna ya que no contiene información relevante.
+Metadata=as.data.frame(MetaDataInfo)#De esta manera se transforma los metadatos en dataframe. 
+```
+
+```{r}
+#Una vez cambiado los datos y metadatos, se genera el objeto de clase SummarizedExperiment.
+
+SE= SummarizedExperiment(assays= list(counts= Datavalues), colData= Metadata)
+save(SE, file = "SummarizedExperiment_PEC1.Rda")#De esta forma se guardará SummarizedExperiment en este caso en Rda.
+SE
+```
+
+Se puede observar el resultado del análisis en el que se describe:
+
+- La clase: SummarizedExperiment
+- Las dimensiones: 39 filas y 695 columnas
+- Metadatos: no hay datos
+- Ensayos: counts o conteos
+- Nombe de las filas: no se han definido nombre de filas
+- Datos de las filas: no hay nombre en los datos de las filas
+- Nombre de las columnas: hay nombres definidos que van desde SUbjects hasta SM.C24.1_T5
+- Datos de columnas: hay 4 variables y sus nombres son ...1, Varname, Vartype y Description 
+
+Una vez obtenido SummarizedExperiments y se extrajesen los datos mencionados en el apartado Métodos, se muestra un resumen estadístico de las variables que se analizaron.
+
+```{r}
+columnas= c("GENDER", "SURGERY", "PESO_T0", "PESO_T2", "PESO_T4", "PESO_T5", "TG_T0", "TG_T2", "TG_T4", "TG_T5", "COL_T0", "COL_T2", "COL_T4", "COL_T5", "GLU_T0", "GLU_T2", "GLU_T4", "GLU_T5")#Se crea una lista de las variables deseadas para la extracción de estas.
+datos_mod= as.data.frame(Datavalues[, columnas])#De esta forma se extraen las variables de la lista y además se transforman los datos a dataframe para facilitar el desarrollo de análisis o modificaciones posteriores.
+for (i in 3:18) {
+  datos_mod[, i] <- as.numeric(datos_mod[, i])
+}#Aunque hay datos numéricos, aparecen las variables como tipo carácteres, por ello se itera en cada variable que se conoce que debe ser numérica y la cambia a tipo numérico.
+summary(datos_mod)
+```
+
+Como se puede observar en el resumen, hay 19 variables en los datos que se van a analizar (aunque la mayoría son las mismas variables repetidas en diferentes etapas del estudio). 
+
+Gender y Surgery son variables de tipo carácter ya que contienen información del género y tipo de cirugía del paciente. Se puede apreciar que, según los valores mínimos y máximos, hay ciertas variables que tienen rangos amplios, puede que sean outliers, es debido a esto por lo que se usaron las medias para amortiguar este tipo de datos al realizar las gráficas. Por último, mencionar que hay ciertas variables que contienen valores "NA'S", son valores vacíos que se tuvieron en cuenta al realizar las medias de cada variable para su posterior uso en las gráficas.
+
+Lo siguiente que se muestra es la evolución en el tiempo de las variables según el tipo de cirugía y agrupadas por género.
+
+```{r}
+#Se crean distintos dataframes según el género y el tipo de cirugía. También se crea un listado de los distintos tiempos en los que supuestamente se recopliaron cada una de las variables.
+
+datos_fem_tubular= datos_mod[datos_mod$GENDER=="F" & datos_mod$SURGERY=="tubular", ]#Datos de mujeres que se hicieron cirugía tubular.
+datos_hom_tubular= datos_mod[datos_mod$GENDER=="M" & datos_mod$SURGERY=="tubular", ]#Datos de hombres que se hicieron cirugía tubular.
+datos_fem_bypass= datos_mod[datos_mod$GENDER=="F" & datos_mod$SURGERY=="by pass", ]#Datos de mujeres que se hicieron cirugía by pass.
+datos_hom_bypass= datos_mod[datos_mod$GENDER=="M" & datos_mod$SURGERY=="by pass", ]#Datos de hombres que se hicieron cirugía by pass.
+tiempos=c(0,2,4,5)#Listado de los meses en los que se recopilaron los datos.
+```
+
+```{r}
+#A continuación se calculan las medias de las variables según género y tipo de cirugía y se hace un listado para su posterior uso en lasm gráficas.
+#Cálculo de medias y listado de variables en el caso de los hombres, na.rm=TRUE quiere decir que exluye del cálculo los valores NA.
+#Peso
+media_peso_hombre_tubular=c(mean(datos_hom_tubular$PESO_T0, na.rm=TRUE), mean(datos_hom_tubular$PESO_T2, na.rm=TRUE), mean(datos_hom_tubular$PESO_T4, na.rm=TRUE), mean(datos_hom_tubular$PESO_T5, na.rm=TRUE))
+media_peso_hombre_bypass=c(mean(datos_hom_bypass$PESO_T0, na.rm=TRUE), mean(datos_hom_bypass$PESO_T2, na.rm=TRUE), mean(datos_hom_bypass$PESO_T4, na.rm=TRUE), mean(datos_hom_bypass$PESO_T5, na.rm=TRUE))
+#Triglicéridos
+media_trigli_hombre_tubular=c(mean(datos_hom_tubular$TG_T0, na.rm=TRUE), mean(datos_hom_tubular$TG_T2, na.rm=TRUE), mean(datos_hom_tubular$TG_T4, na.rm=TRUE), mean(datos_hom_tubular$TG_T5, na.rm=TRUE))
+media_trigli_hombre_bypass=c(mean(datos_hom_bypass$TG_T0, na.rm=TRUE), mean(datos_hom_bypass$TG_T2, na.rm=TRUE), mean(datos_hom_bypass$TG_T4, na.rm=TRUE), mean(datos_hom_bypass$TG_T5, na.rm=TRUE))
+#Colesterol total
+media_colest_hombre_tubular=c(mean(datos_hom_tubular$COL_T0, na.rm=TRUE), mean(datos_hom_tubular$COL_T2, na.rm=TRUE), mean(datos_hom_tubular$COL_T4, na.rm=TRUE), mean(datos_hom_tubular$COL_T5, na.rm=TRUE))
+media_colest_hombre_bypass=c(mean(datos_hom_bypass$COL_T0, na.rm=TRUE), mean(datos_hom_bypass$COL_T2, na.rm=TRUE), mean(datos_hom_bypass$COL_T4, na.rm=TRUE), mean(datos_hom_bypass$COL_T5, na.rm=TRUE))
+#Glucosa
+media_glucosa_hombre_tubular=c(mean(datos_hom_tubular$GLU_T0, na.rm=TRUE), mean(datos_hom_tubular$GLU_T2, na.rm=TRUE), mean(datos_hom_tubular$GLU_T4, na.rm=TRUE), mean(datos_hom_tubular$GLU_T5, na.rm=TRUE))
+media_glucosa_hombre_bypass=c(mean(datos_hom_bypass$GLU_T0, na.rm=TRUE), mean(datos_hom_bypass$GLU_T2, na.rm=TRUE), mean(datos_hom_bypass$GLU_T4, na.rm=TRUE), mean(datos_hom_bypass$GLU_T5, na.rm=TRUE))
+
+#A continuación se hace lo mismo con los datos de mujeres.
+#Peso
+media_peso_fem_tubular=c(mean(datos_fem_tubular$PESO_T0, na.rm=TRUE), mean(datos_fem_tubular$PESO_T2, na.rm=TRUE), mean(datos_fem_tubular$PESO_T4, na.rm=TRUE), mean(datos_fem_tubular$PESO_T5, na.rm=TRUE))
+media_peso_fem_bypass=c(mean(datos_fem_bypass$PESO_T0, na.rm=TRUE), mean(datos_fem_bypass$PESO_T2, na.rm=TRUE), mean(datos_fem_bypass$PESO_T4, na.rm=TRUE), mean(datos_fem_bypass$PESO_T5, na.rm=TRUE))
+#Triglicéridos
+media_trigli_fem_tubular=c(mean(datos_fem_tubular$TG_T0, na.rm=TRUE), mean(datos_fem_tubular$TG_T2, na.rm=TRUE), mean(datos_fem_tubular$TG_T4, na.rm=TRUE), mean(datos_fem_tubular$TG_T5, na.rm=TRUE))
+media_trigli_fem_bypass=c(mean(datos_fem_bypass$TG_T0, na.rm=TRUE), mean(datos_fem_bypass$TG_T2, na.rm=TRUE), mean(datos_fem_bypass$TG_T4, na.rm=TRUE), mean(datos_fem_bypass$TG_T5, na.rm=TRUE))
+#Colesterol
+media_colest_fem_tubular=c(mean(datos_fem_tubular$COL_T0, na.rm=TRUE), mean(datos_fem_tubular$COL_T2, na.rm=TRUE), mean(datos_fem_tubular$COL_T4, na.rm=TRUE), mean(datos_fem_tubular$COL_T5, na.rm=TRUE))
+media_colest_fem_bypass=c(mean(datos_fem_bypass$COL_T0, na.rm=TRUE), mean(datos_fem_bypass$COL_T2, na.rm=TRUE), mean(datos_fem_bypass$COL_T4, na.rm=TRUE), mean(datos_fem_bypass$COL_T5, na.rm=TRUE))
+#Glucosa
+media_glucosa_fem_tubular=c(mean(datos_fem_tubular$GLU_T0, na.rm=TRUE), mean(datos_fem_tubular$GLU_T2, na.rm=TRUE), mean(datos_fem_tubular$GLU_T4, na.rm=TRUE), mean(datos_fem_tubular$GLU_T5, na.rm=TRUE))
+media_glucosa_fem_bypass=c(mean(datos_fem_bypass$GLU_T0, na.rm=TRUE), mean(datos_fem_bypass$GLU_T2, na.rm=TRUE), mean(datos_fem_bypass$GLU_T4, na.rm=TRUE), mean(datos_fem_bypass$GLU_T5, na.rm=TRUE))
+```
+
+```{r}
+#A continuación se realizan las gráficas de líneas de las variables en el caso de los hombres.
+
+par(mfrow=c(2, 2), oma = c(0, 0, 3, 0))#Se indica el número de gráficos por fila y columnas, además, se ajusta el margen de arriba para dejar espacio para texto. 
+plot(tiempos, media_peso_hombre_bypass, type = "b", col = "blue", xlab = "Tiempo (meses)", ylab = "Peso (kg)", main = "Peso", cex.main=0.9)#Se crea un gráfico de líneas y puntos con el tiempo en eje x y la media de peso en hombre con by pass en eje y, con título y etiquetas en el eje x e y, la línea tiene color azul  el tamaño de letra es 0.9.
+lines(tiempos, media_peso_hombre_tubular, type = "b", col = "red")#se añade al gráfico anterior los datos de la media de hombres con cirugía tubular y color rojo.
+legend("topright", 
+       legend = c("Bypass", "Tubular"),
+       col = c("blue", "red"),
+       lty = 1,
+       pch = 1,
+       cex=0.65)#Se añade una leyenda en la esquina superior derecha que contiene el color de cada tipo de cirugía, el tamaño del texto es 0.65. Se hace una única leyenda ya que todos los gráficos tienen el mismo formato y están agrupados, de forma que solo se pierde parte de una de las cuatro gráficas que se crean. 
+
+plot(tiempos, media_trigli_hombre_bypass, type = "b", col = "blue", xlab = "Tiempo (meses)", ylab = "Triglicéridos (mg/dL)", main = "Triglicéridos", cex.main=0.9)
+lines(tiempos, media_trigli_hombre_tubular, type = "b", col = "red")
+
+plot(tiempos, media_colest_hombre_bypass, type = "b", col = "blue", xlab = "Tiempo (meses)", ylab = "Colesterol total (mg/dL)", main = "Colesterol", cex.main=0.9)
+lines(tiempos, media_colest_hombre_tubular, type = "b", col = "red")
+
+plot(tiempos, media_glucosa_hombre_bypass, type = "b", col = "blue", xlab = "Tiempo (meses)", ylab = "Glucosa (\u00B5U/mL)", main = "Glucosa", cex.main=0.9)
+lines(tiempos, media_glucosa_hombre_tubular, type = "b", col = "red")
+
+mtext("Evolución de niveles promedio de parámetros en hombres tras cirugía bariátrica", side= 3, line= 1, outer = TRUE, cex = 1.2)#De esta forma se puede introducir un texto encima del conjunto de gráficos, en este caso un título que englobe los gráficos.
+```
+
+Se puede observar en las cuatro gráficas que, en términos generales, los parámetros de estudio van disminuyendo los niveles a lo largo del tiempo al igual que el peso de los pacientes. Los pacientes a los que se le hicieron el by pass empezaron de media con más peso y niveles más altos que aquellos a los que se les hicieron la cirugía tubular, aunque al final del estudio todos los pacientes llegaron a tener pesos y niveles similares, a excepción del colesterol total.
+
+```{r}
+#Lo que se hizo para crear las gráficas de los hombres según la variable, también se hace con las mujeres.
+
+par(mfrow=c(2, 2), oma = c(0, 0, 3, 0))
+
+plot(tiempos, media_peso_fem_bypass, type = "b", col = "green", xlab = "Tiempo (meses)", ylab = "Peso (kg)", main = "Peso", cex.main=0.9)
+lines(tiempos, media_peso_fem_tubular, type = "b", col = "purple")
+legend("topright", 
+       legend = c("Bypass", "Tubular"),
+       col = c("green", "purple"),
+       lty = 1,
+       pch = 1,
+       cex=0.65)
+
+plot(tiempos, media_trigli_fem_bypass, type = "b", col = "green", xlab = "Tiempo (meses)", ylab = "Triglicéridos (mg/dL)", main = "Triglicéridos", cex.main=0.9)
+lines(tiempos, media_trigli_fem_tubular, type = "b", col = "purple")
+
+plot(tiempos, media_colest_fem_bypass, type = "b", col = "green", xlab = "Tiempo (meses)", ylab = "Colesterol total (mg/dL)", main = "Colesterol", cex.main=0.9)
+lines(tiempos, media_colest_fem_tubular, type = "b", col = "purple")
+
+plot(tiempos, media_glucosa_fem_bypass, type = "b", col = "green", xlab = "Tiempo (meses)", ylab = "Glucosa (\u00B5U/mL)", main = "Glucosa", cex.main=0.9)
+lines(tiempos, media_glucosa_fem_tubular, type = "b", col = "purple")
+
+mtext("Evolución de niveles promedio de parámetros en mujeres tras cirugía bariátrica", side= 3, line= 1, outer = TRUE, cex = 1.2)
+```
+
+En estas gráficas se pueden ver patrones parecidos a las observadas en los gráficos de hombres, en términos generales los niveles de los parámetros y el peso de las pacientes descienden con el paso del tiempo, las pacientes con cirugía by pass comenzaron con mayor peso y niveles de media que las de cirugía tubular aunque al final acabaron con pesos y parámetros similares. Hay que destacar el hecho de que, en el caso del colesterol total, las pacientes con cirugía tubular acabaron teniendo mayores niveles de colesterol que cuando se comenzó el estudio.
+
+### **Discusión**
+
+En este trabajo se ha realizado un objeto de clase SummarizedExperiment, esta es una extensión de otra clase lalamda ExpressionSet. Las diferencias entre SummarizedExperiment y ExpressionSet son que, aunque en ambos se manejan gran cantidad de datos, SummarizedExperiment permite asociar rangos genómicos, es más flexible con la información de las filas y columas y permite el manejo de varias matrices; mientras que ExpressionSet no es tan flexible con la informaión de los datos y sólo permite el manejo de una matriz.
+
+Tanto en las gráficas como lo mencionado en el resumen estadístico, se observa una reducción de los niveles de todos los parámetros que se han analizado, dando como resultado también una pérdida de peso. Esto tiene sentido si se conoce un poco en qué consiste las cirugías realizadas, en ambas hay una reducción del tamaño del estómago por lo que se reduce la cantidad de comida que se ingiere, además, en el by pass se conecta parte del estómago con parte del intestino delgado disminuyendo también la absorción de nutrientes por evitar parte del intestino.
+
+Es lógico pensar que, al disminuir la cantidad de alimento ingestado y/o la disminución de nutrientes, vayan bajando los niveles de azúcares y grasas en sangre, se está generando una condición de déficit calórico en la cual el cuerpo usa las reservas que posee para compensar el déficit y eso provoca la reducción de peso en última instancia. Esto además, acabaría también generando un mayor control de glucosa en sangre y puede mejorar la situación de pacientes diabéticos, sobretodo los tipo II. 
+
+### **Conclusión**
+
+Se ha realizado un estudio con una temática de gran interés por la situación occidental actual de parte de la población con obesidad mórbida en la cual se puede obserar los efectos de estas dons cirugías en la que se puede concluir que los pacientes que se somenten a dichostratamientos mejoran sus condiciones metabólicas. 
+
+### **Referencias**
+
+Alexsanchezpla. Repositorio metaboData. GitHub. <https://github.com/nutrimetabolomics/metaboData.git>.
+
+García-Barrera-Francisco-Javier. Repositorio GitHub. <https://github.com/fragarbar/Garcia-Barrera-Francisco-Javier-PEC1.git>.
+
+Palau-Rodriguez M, Tulipani S, Marco-Ramell A, Miñarro A, Jáuregui O, et al. (2018) Metabotypes of response to bariatric surgery independent of the magnitude of weight loss. PLOS ONE 13(6): e0198214. <https://doi.org/10.1371/journal.pone.0198214>.
+
+Morgan M, Obenchain V, Hester J, Pagès H. (2023). SummarizedExperiment for Coordinating Experimental Assays, Samples, and Regions of Interest. Bioconductor.org. <https://bioconductor.org/packages/release/bioc/vignettes/SummarizedExperiment/inst/doc/SummarizedExperiment.html>.
+
+2025. The SummarizedExperiment class. The Bioconductor project. <https://carpentries-incubator.github.io/bioc-project/09-summarizedexperiment.html>. 
+
+ExpressionSet and SummarizedExperiment. STHDA. <https://www.sthda.com/english/wiki/expressionset-and-summarizedexperiment>. 
+
+La gastrectomía tubular, cirugía bariátrica para tratar la obesidad. Ilahy. <https://www.ilahy.es/cirugia/gastrectomia-tubular-obesidad.html>.
+
+El bypass gástrico, cirugía bariátrica para tratar la obesidad. Ilahy. <https://www.ilahy.es/cirugia/bypass-gastrico-obesidad.html>.
+
+Gráfico de líneas en R. RCoder. <https://r-coder.com/grafico-lineas-r/>.
+
+Márgenes en R. RCharts. <https://r-charts.com/es/r-base/margenes/>.
+
+Función par. GitHub. <https://fhernanb.github.io/Graficos-con-R/par.html>.
+
+Añadir textos en R con las funciones text y mtext. RCharts. <https://r-charts.com/es/r-base/textos/>.
+
+Save: Save R Objects. RDocumentation. <https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/save>.
